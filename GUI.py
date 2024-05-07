@@ -3,7 +3,6 @@ from tkinter import ttk, filedialog, messagebox
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import numpy as np
-# import fitz  # PyMuPDF
 import webbrowser
 
 # Function to open the PDF file
@@ -15,7 +14,6 @@ class PropagationModelGUI:
         self.root = root
         self.root.title("Propagation Model Calculator")
         
-
         # Variables to store input parameters
         self.frequency = tk.DoubleVar(value=150)  # MHz
         self.distance = tk.DoubleVar(value=1)     # km
@@ -28,25 +26,23 @@ class PropagationModelGUI:
         self.model_options = ["Okumura", "Hata", "Free Space", "CCIR"]
         self.model_area = [" Urban", "Suburban", "Rural"]
         self.model_frame = ttk.LabelFrame(root, text="Propagation Model")
-        self.model_frame.pack(pady=10, padx=10, side="left",expand= 'True', fill= 'both')
+        self.model_frame.pack(pady=10, padx=10, side="left", expand='True', fill='both')
         self.area_frame = ttk.LabelFrame(root, text="Area:")
-        self.area_frame.pack(pady=10, padx=10, side="bottom",expand= 'True', fill= 'both')
+        self.area_frame.pack(pady=10, padx=10, side="bottom", expand='True', fill='both')
         ttk.Label(self.model_frame, text="Select Model:").pack(side="left", padx=5)
-        ttk.Label(self.area_frame, text="Hata Area:").pack(side="left",padx=5)
+        ttk.Label(self.area_frame, text="Hata Area:").pack(side="left", padx=5)
         self.model_combobox = ttk.Combobox(self.model_frame, textvariable=self.model_var, values=self.model_options, state="readonly")
         self.model_combobox.pack(side="left")
         self.model_combobox.bind("<<ComboboxSelected>>", self.on_model_selected)
         self.model_combobox_area = ttk.Combobox(self.area_frame, textvariable=self.area_var, values=self.model_area, state="readonly")
         self.model_combobox_area.pack(side="left")
         self.model_combobox_area.config(state="disable")
-        
 
         # Input fields for parameters
         self.plot_frame = ttk.LabelFrame(root, text="Loss Graph")
         self.plot_frame.pack(pady=10,padx=10,side='right',expand='True', fill='both')
-        #self.plot_frame.pack_propagate(False)
         self.param_frame = ttk.LabelFrame(root, text="Parameters")
-        self.param_frame.pack(pady=10, padx=10, side="bottom", expand= 'True', fill= 'both')
+        self.param_frame.pack(pady=10, padx=10, side="bottom", expand='True', fill='both')
         tk.Label(self.param_frame, text="Frequency (MHz):").grid(row=0, column=0, sticky="w")
         self.freq_entry = ttk.Entry(self.param_frame, textvariable=self.frequency)
         self.freq_entry.grid(row=0, column=1)
@@ -70,13 +66,19 @@ class PropagationModelGUI:
         # File menu
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.file_menu.add_command(label="Open PDF", command=open_pdf)
-        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.menu_bar.add_cascade(label="Help", menu=self.file_menu)
 
-        #Display the equation of propagation models
-        self.power_loss_label = tk.Label(self.param_frame, text="Power Loss of Receiver :", foreground='red', justify="right", wraplength=300)
-        self.equation_label = tk.Label(root, text="", justify="center", wraplength=300)
+        # Display the equation of propagation models
+        self.equation_frame = ttk.LabelFrame(root, text="Equation")
+        self.equation_frame.pack(pady=10, padx=10, side="bottom", expand='True', fill='both')
+        self.equation_label = tk.Label(self.equation_frame, text="", justify="center", wraplength=300)
         self.equation_label.pack(pady=10)
-        self.power_loss_label.grid(row=6,column=0)
+
+        # Display the power loss of the receiver
+        self.power_loss_frame = ttk.LabelFrame(root, text="Power Loss")
+        self.power_loss_frame.pack(pady=10, padx=10, side="bottom", expand='True', fill='both')
+        self.power_loss_label = tk.Label(self.power_loss_frame, text="", justify="right", wraplength=300, foreground='red')
+        self.power_loss_label.pack(pady=10)
 
         # Frame for displaying PDF page
         self.pdf_frame = tk.Frame(root)
@@ -165,37 +167,33 @@ class PropagationModelGUI:
         # Plot the graph
         self.plot_graph(dist, loss, model)
 
-        #print the equation text
+        # Update the equation label
         self.equation_label.config(text=equation_text)
-        self.power_loss_label.config(text="Power Loss of Receiver :" + str(loss[-1])+" dB")
+
+        # Update the power loss label
+        self.power_loss_label.config(text="Power Loss of Receiver: " + str(loss[-1]) + " dB")
 
     def okumura_model(self, freq, dist, h_t, h_r):
-        # Implement Okumura model calculation
-        # This is a placeholder, replace with actual calculation
-        #Κ = 
+        # Okumura model calculation...
         return 69.55 + 26.16 * np.log10(dist) - 13.82 * np.log10(h_t) - 4.78 * (np.log10(freq))**2  * np.log10(h_r)
 
     def hata_model(self, freq, dist, h_t, h_r, area):
-        # Implement Hata model calculation for different areas
-
+        # Hata model calculation...
         if area == "Urban":
             return 69.55 + 26.16 * np.log10(dist) + 13.82 * np.log10(h_t) - 4.78 * (np.log10(freq))**2 + (44.9 - 6.55 * np.log10(h_t)) * np.log10(dist) + 18.33 * np.log10(freq) - 40.94
         elif area == "Suburban":
             K = (1.1 * np.log10(freq) -0.7) * h_r - (1.56*np.log10(freq) - 0.8)
-            return 69.55 + 26.16 * np.log10(dist) - 13.82 * np.log10(h_t) - 4.78 * (np.log10(freq))**2 + (44.9 - 6.55 * np.log10(h_t)) * np.log10(dist) + 18.33 * np.log10(freq) - K # 16.94
+            return 69.55 + 26.16 * np.log10(dist) - 13.82 * np.log10(h_t) - 4.78 * (np.log10(freq))**2 + (44.9 - 6.55 * np.log10(h_t)) * np.log10(dist) + 18.33 * np.log10(freq) - K
         elif area == "Rural":
             return 69.55 + 26.16 * np.log10(dist) - 13.82 * np.log10(h_t) - 4.78 * (np.log10(freq))**2 + (44.9 - 6.55 * np.log10(h_t)) * np.log10(dist) + 18.33 * np.log10(freq) - 4.78
 
     def free_space_model(self, freq, dist):
-        # Implement Free Space model calculation
-        # This is a placeholder, replace with actual calculation
+        # Free Space model calculation...
         return 20 * np.log10(dist) + 20 * np.log10(freq) + 147.55
 
     def ccir_model(self, freq, dist, h_t, h_r):
-        # Implement CCIR model calculation
-        # This is a placeholder, replace with actual calculation
+        # CCIR model calculation...
         return 36.6 * np.log10(dist) + 22.8 * np.log10(freq) + 27.2
-
 
     def plot_graph(self, dist, loss, model):
         # Clear the previous plot
@@ -220,8 +218,7 @@ class PropagationModelGUI:
         toolbar = NavigationToolbar2Tk(canvas, self.plot_frame)
         toolbar.update()
         canvas.get_tk_widget().pack()
-
-
+        
 def main():
     root = tk.Tk()
     root.geometry('800x400')
